@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<launch> 
+
+  <!--Odometry arduino-->
+  <node pkg="rosserial_python" type="serial_node.py" name="serial_node_rnet">
+   	<param name="port"            value="/dev/arduino_rnet" /> 
+   	<param name="baud"            value="115200" />
+  </node>
+  
+  <node pkg="new_rnet" type="profile_map" name="profile_map" output="screen" /> 
+  
+  <node pkg="joy" type="joy_node" name="joy" />
+  
+  <node name="joyrnet" pkg="ros_rnet_controller" type="joy_rnet_controller" />
+  
+  <include file="$(find wheelchair_iaslab_odometry)/launch/odometry.launch"/>
+  
+
+  <node pkg="rosbag" type="record" args="-o /home/$(env USER)/anita_gdf/rnet_test /cmd_vel /odom /odometry/filtered /mapped_velocity" name="record" output="screen"/>
+
+</launch>

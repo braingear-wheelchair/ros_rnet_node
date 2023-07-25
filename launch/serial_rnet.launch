@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<launch> 
+
+  <!--Odometry arduino-->
+  <node pkg="rosserial_python" type="serial_node.py" name="serial_node_rnet">
+   	<param name="port"            value="/dev/arduino_rnet" /> 
+   	<param name="baud"            value="115200" />
+  </node>
+  
+  <node pkg="ros_rnet_node" type="profile_map_i" name="profile_map" output="screen" /> 
+  
+</launch>
