@@ -10,7 +10,6 @@ project(ros_rnet_node)
 find_package(catkin REQUIRED COMPONENTS
   tf2
   tf2_ros
-  apriltag_ros
 )
 
 
