@@ -12,13 +12,13 @@ const int leftPin = 6;
 const int rightPin = 7;
 
 //Emergency Button Pin and Value
-const int forceStopPin = 2;
-const int removeStopPin = 3;
-volatile bool forcedStop = false;
+const int forceStopPin = 3;
+const int removeStopPin = 2;
+volatile bool forcedStop = true;
 
 //Speed and pwm limit
 float maxVel = 1;
-int minVal = 200;
+int minVal = 255;
 
 //Variables for storing linear and angular speed as pwm values
 int pwm_linear = minVal;
@@ -80,6 +80,8 @@ void setup(){
   pinMode(leftPin,OUTPUT);
   pinMode(rightPin,OUTPUT);
 
+  pinMode(52, OUTPUT);
+
   pinMode(forceStopPin, INPUT_PULLUP);
   pinMode(removeStopPin, INPUT_PULLUP);
   
@@ -102,10 +104,12 @@ void setup(){
   nh.subscribe(sub_a);
 
   // Initialize the pwm pins
-  analogWrite(forwardPin, 255);
-  analogWrite(leftPin, 255);
-  analogWrite(reversePin, 255);
-  analogWrite(rightPin, 255);
+  analogWrite(forwardPin, minVal);
+  analogWrite(leftPin, minVal);
+  analogWrite(reversePin, minVal);
+  analogWrite(rightPin, minVal);
+
+  
 }
 
 void loop(){
@@ -115,8 +119,11 @@ void loop(){
     analogWrite(leftPin, minVal);
     analogWrite(reversePin, minVal);
     analogWrite(rightPin, minVal);
+    
+    digitalWrite(52, LOW);
   }
   else{
+    digitalWrite(52, HIGH);
     //Linear Velocity
     
     if(forward){
@@ -147,7 +154,7 @@ void loop(){
     
   }
   //keep the set voltages for 10 milliseconds
-  delay(10); 
+  delay(5); 
 
   // Keep the communication between ROS and Arduino
   nh.spinOnce();
