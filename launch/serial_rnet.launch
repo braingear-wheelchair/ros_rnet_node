@@ -7,6 +7,6 @@
    	<param name="baud"            value="115200" />
   </node>
   
-  <node pkg="ros_rnet_node" type="profile_map_i" name="profile_map" output="screen" /> 
+  <node pkg="ros_rnet_node" type="profile_map_i" name="profile_map" output="screen" />
   
 </launch>
