@@ -1,26 +1,7 @@
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
-#include <std_msgs/String.h>
 #include <std_msgs/Int32.h>
 #include <math.h>
-
-//enum class Profile {One, Two, Three, Four, Five, Eight};
-//static Profile profile = Profile::One;
-
-//static int profile = 1;
-/*
-const std::vector<float> velocities = {0.55, 0.264, 	//One
-					0.88, 0.264, 	//Two
-					1.32, 0.44,	//Three
-					2.20, 0.44,	//Four
-					2.20, 0.44,	//Five
-					1.76, 0.44,	//Eight
-					};*/
-
-float max_lin_vel = 0.55*4;
-float max_ang_vel = 0.27*4;
-
-float vel_min = 0.83; // Velocità minima (in percentuale) rispetto alla mappa
 
 //Speed and pwm limit
 float maxVel=1;
@@ -33,69 +14,58 @@ geometry_msgs::Twist mapped_velocity;
 float linear_vel = 0;
 float angular_vel = 0;
 
-/*
-void profile_setting(const std_msgs::Int32& p){
-	profile = p.data;
-	max_lin_vel = velocities[profile*2];
-	max_ang_vel = velocities[profile*2+1];
-}*/
 
 bool neg_lin_vel = false;
 bool neg_ang_vel = false;
 
 int x = minVal;
 int y = minVal;
-/*
-int map_pwm(float x){ 
-	return (int)(minVal*(x-maxVel)/(-maxVel));
-}
 
-int map_values_profile(float x, float a1, float a2, float b1, float b2){
-	float i=b1+((x-a1)*(b2-b1)/(a2-a1)) ;
-	//return map_pwm(i);
-	return (int) i;
-}*/
-
-int map_values_linear(float v){
+int map_values_linear(float x){
 	if(!neg_lin_vel){	//avanti
-		if(v>=0.56) return maxVel;
-		else if(v==0) return minVal;
-		return (int) 1 + 27.795 + 0.000171168* sqrt(2.15845* pow(10, 9) - 3.373* pow(10,9)*v);
+		if(x>=0.56) return maxVel;
+		else if(x==0) return minVal;
+
+		if(x <= 0.38)
+			return round(36.6667 - 0.235702*sqrt(600*x+11));
+		else
+			return round(30.25 + 0.25*sqrt(449-800*x));
 	}
 	else{				//indietro
-		if(v>=0.27) return maxVel;
-		else if(v==0) return minVal;
-		return (int) 362.096 -1 - 0.000973882 * sqrt(2.29604*pow(10,10)*v + 1.09047*pow(10,11));
+		if(x>=0.27) return maxVel;
+		else if(x==0) return minVal;
+		
+		if(x <= 0.13)
+			return round(17.5353 + 0.000137255*sqrt(2.7246*pow(10,10) - 7.28571*pow(10,10)*x));
+		else
+			return round(29.4999 + 0.000177087*sqrt(2.49005*pow(10,9) - 8.92858*pow(10,9)*x));
 	}
 }
-int map_values_angular(float v){
+int map_values_angular(float x){
 	if(!neg_ang_vel){	//sinistra
-		if(v>=0.81) return maxVel;
-		else if(v==0) return minVal;
-		return (int) 777.297 - 0.000798868 * sqrt(3.23206 * pow(10,10) * v + 8.52686 * pow(10,11));
+		if(x>=0.806) return maxVel;
+		else if(x==0) return minVal;
+		
+		if(x <= 0.73) 
+			return round(41.8148 - 0.0000734499*sqrt(2.72294*pow(10,10)*x + 9.99985*pow(10,8)));
+		else
+			return round(27.6 + 0.0000347833*sqrt(1.03944*pow(10,11) - 1.28571*pow(10,11)*x));
 	}
 	else{			
-		if(v>=0.74) return maxVel;
-		else if(v==0) return minVal;
-		return (int) 62.5333-0.000383892 * sqrt(5.2098*pow(10,9)*v + 4.7583* pow(10,9));
+		if(x>=0.74) return maxVel;
+		else if(x==0) return minVal;
+		
+		if(x <= 0.34)
+			return round(44.5203 - 0.000216842*sqrt(7.29168*pow(10,9)*x + 9.03179*pow(10,8)));
+		else
+			return round(27.9062 + 0.0000978282*sqrt(3.41492*pow(10,9) - 4.57142*pow(10,9)*x));
 	}
 }
-
 
 
 void callback(const geometry_msgs::Twist& velocity){
 	linear_vel = velocity.linear.x;
 	angular_vel = velocity.angular.z;
-	
-	if(linear_vel > max_lin_vel)
-		linear_vel = max_lin_vel;
-	if(linear_vel < -max_lin_vel)
-		linear_vel = -max_lin_vel;
-		
-	if(angular_vel > max_ang_vel)
-		angular_vel = max_ang_vel;
-	if(angular_vel < -max_ang_vel)
-		angular_vel = -max_ang_vel;
 	
 	if(linear_vel < 0)
 		neg_lin_vel = true;
@@ -106,19 +76,10 @@ void callback(const geometry_msgs::Twist& velocity){
 		neg_ang_vel = true;
 	else
 		neg_ang_vel = false;
-	
-	//mappa da [-0.55,0.55] a [0,1]
-	//mappa da [-1,1] a [x,1] -> x il valore che poi sarà 40 in arduino = 0.843
-	//x = map_values_profile(abs(linear_vel), 0, max_lin_vel, vel_min,1);
-	//y = map_values_profile(abs(angular_vel), 0, max_ang_vel, vel_min,1) + 1;
-	
-	//x = map_values_profile(abs(linear_vel), 0, max_lin_vel, minVal,0);
-	//y = map_values_profile(abs(angular_vel), 0, max_ang_vel, minVal,0);
-	
+
 	x = map_values_linear(abs(linear_vel));
 	y = map_values_angular(abs(angular_vel));
 
-	//se negative le velocità in input torna a valori negativi
 	if(neg_lin_vel)
 		x *=-1;
 	if(neg_ang_vel)
@@ -133,7 +94,6 @@ int main(int argc, char** argv){
 	ros::init(argc,argv,"profile_mapping");
 	ros::NodeHandle nh;
 	ros::Subscriber sub = nh.subscribe("cmd_vel", 10, callback);
-	//ros::Subscriber profile_set = nh.subscribe("set_profile", 10, profile_setting);
 
 	ros::Publisher pub_l = nh.advertise<std_msgs::Int32>("arduino_linear", 1);
 	ros::Publisher pub_a = nh.advertise<std_msgs::Int32>("arduino_angular", 1);
