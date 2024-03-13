@@ -10,6 +10,14 @@ int minVal=255;
 std_msgs::Int32 x_velocity;
 std_msgs::Int32 y_velocity;
 
+// TODO: add a pid with the odometry
+
+std::vector<float> vel_x = {0.02, 0.15, 0.21, 0.40, 0.56};
+std::vector<int>   cmd_x = {255, 40, 39, 38, 37, 36};
+
+std::vector<float> vel_xn = {0.01, 0.03, 0.06, 0.10, 0.14, 0.15, 0.26};
+std::vector<int>   cmd_xn = {255, 45, 44, 43, 42, 41, 40, 17};
+
 geometry_msgs::Twist mapped_velocity;
 float linear_vel = 0;
 float angular_vel = 0;
@@ -21,31 +29,26 @@ bool neg_ang_vel = false;
 int x = minVal;
 int y = minVal;
 
-int map_values_linear(float x){
-	if(!neg_lin_vel){	//avanti
-		if(x>=0.56) return maxVel;
-		else if(x==0) return minVal;
+int index_x = 0;
 
-		if(x <= 0.38)
-			return round(36.6667 - 0.235702*sqrt(600*x+11));
-		else
-			return round(30.25 + 0.25*sqrt(449-800*x));
+int map_values_linear(float x){
+	index_x = 0;
+	if(!neg_lin_vel){	//avanti
+		while (x > vel_x[index_x])
+			index_x++;
+		return cmd_x[index_x];
 	}
-	else{				//indietro
-		if(x>=0.27) return maxVel;
-		else if(x==0) return minVal;
-		
-		if(x <= 0.13)
-			return round(17.5353 + 0.000137255*sqrt(2.7246*pow(10,10) - 7.28571*pow(10,10)*x));
-		else
-			return round(29.4999 + 0.000177087*sqrt(2.49005*pow(10,9) - 8.92858*pow(10,9)*x));
+	else{		
+		while (x > vel_xn[index_x])
+			index_x++;
+		return cmd_xn[index_x];
 	}
 }
 int map_values_angular(float x){
 	if(!neg_ang_vel){	//sinistra
 		if(x>=0.806) return maxVel;
 		else if(x==0) return minVal;
-		
+
 		if(x <= 0.73) 
 			return round(41.8148 - 0.0000734499*sqrt(2.72294*pow(10,10)*x + 9.99985*pow(10,8)));
 		else
